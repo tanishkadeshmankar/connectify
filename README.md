@@ -53,7 +53,7 @@ See [`docs/DATABASE_SETUP.md`](./docs/DATABASE_SETUP.md). Never put a real passw
 
 ## Vercel deployment
 
-The Vite frontend is built to `dist`, and `api/[...path].js` exposes the Express API as a Vercel Function. In Vercel, use the **Vite** framework preset with build command `npm run build` and output directory `dist`. Add `MONGODB_URI` and a long random `JWT_SECRET` under **Project Settings → Environment Variables** for the Production environment, then redeploy. Add the deployment's permitted outbound IP access to the Atlas project's Network Access list. After deployment, check `https://YOUR-DOMAIN/api/health`; `database` should say `connected`. Keep database credentials out of GitHub.
+The Vite frontend is built to `dist`, and `api/index.js` exposes the Express API as a Vercel Function. `vercel.json` routes `/api/*` requests to that function while preserving their path and query parameters. Add `MONGODB_URI` and a long random `JWT_SECRET` under **Project Settings → Environment Variables** for the Production environment, then redeploy. Add the deployment's permitted outbound IP access to the Atlas project's Network Access list. After deployment, check `https://YOUR-DOMAIN/api/health`; `database` should say `connected`. Keep database credentials out of GitHub.
 
 ## Project map
 
