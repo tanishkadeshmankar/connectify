@@ -17,6 +17,7 @@ if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
 const app = express()
 const port = Number(process.env.PORT) || 3001
 const dirname = path.dirname(fileURLToPath(import.meta.url))
+let databaseReady = Promise.resolve()
 
 app.use(helmet({
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
@@ -28,6 +29,10 @@ app.use(helmet({
 }))
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }))
 app.use(express.json({ limit: '30kb' }))
+app.use('/api', async (_req, _res, next) => {
+  await databaseReady
+  next()
+})
 app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: 'draft-7', legacyHeaders: false }))
 app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: 'draft-7', legacyHeaders: false }))
 app.use('/api', router)
@@ -76,7 +81,7 @@ async function seedCatalog() {
 }
 
 if (process.env.MONGODB_URI) {
-  mongoose.connect(process.env.MONGODB_URI)
+  databaseReady = mongoose.connect(process.env.MONGODB_URI)
     .then(seedCatalog)
     .catch((error) => console.error('MongoDB connection failed:', error.message))
 } else {
@@ -86,5 +91,9 @@ if (process.env.MONGODB_URI) {
 const reminderTimer = setInterval(() => sendDueReminders().catch((error) => console.error('Reminder check failed:', error.message)), 30_000)
 reminderTimer.unref()
 
-const host = '0.0.0.0'
-app.listen(port, host, () => console.log(`Connectify API listening on http://localhost:${port}`))
+export default app
+
+if (!process.env.VERCEL) {
+  const host = '0.0.0.0'
+  app.listen(port, host, () => console.log(`Connectify API listening on http://localhost:${port}`))
+}
